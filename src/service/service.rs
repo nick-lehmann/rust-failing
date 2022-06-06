@@ -1,5 +1,8 @@
-use super::errors::ServiceResult;
+use super::errors::{ServiceError, ServiceResult};
 use crate::external::{query, DatabaseError};
+
+// Special ID to test for forbidden access. No user should have access to the user data associated with this ID.
+static ADMIN_ID: i32 = 1;
 
 /// Query an external database.
 ///
@@ -21,6 +24,10 @@ use crate::external::{query, DatabaseError};
 /// assert_eq!(result, None);
 /// ```
 pub fn get_user(id: i32) -> ServiceResult<Option<i32>> {
+    if id == ADMIN_ID {
+        return Err(ServiceError::Forbidden());
+    }
+
     match query(id) {
         Ok(user) => Ok(Some(user)),
         Err(e) => match e {

@@ -5,6 +5,9 @@ pub enum ServiceError {
     #[error("{0}")]
     ValidationError(String),
 
+    #[error("Forbidden")]
+    Forbidden(),
+
     #[error("{0}")]
     Recoverable(String),
 
