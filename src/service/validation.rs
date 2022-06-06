@@ -24,3 +24,54 @@ pub fn validate_input(input: ApiInput) -> ServiceResult<InputData> {
 
     Ok(InputData { id: id })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::reset_state;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_valid() {
+        reset_state();
+
+        let api_input = HashMap::from([("id".into(), "1".to_string())]);
+        let response = validate_input(api_input).unwrap();
+
+        assert_eq!(response, InputData { id: 1 });
+    }
+
+    #[test]
+    fn test_missing_key() {
+        reset_state();
+
+        // TODO: Check for exact error.
+        // let expected = ServiceError::ValidationError("Invalid user id".to_string());
+
+        let api_input = HashMap::from([("bar".into(), "foo".to_string())]);
+        let response = validate_input(api_input);
+        let error = response.unwrap_err();
+
+        match error {
+            ServiceError::ValidationError(_) => "",
+            _ => panic!("Expected ValidationError, instead returned: {:?}", error),
+        };
+    }
+
+    #[test]
+    fn test_invalid_user_id() {
+        reset_state();
+
+        // TODO: Check for exact error.
+        // let expected = ServiceError::ValidationError("Invalid user id".to_string());
+
+        let api_input = HashMap::from([("id".into(), "foo".to_string())]);
+        let response = validate_input(api_input);
+        let error = response.unwrap_err();
+
+        match error {
+            ServiceError::ValidationError(_) => "",
+            _ => panic!("Expected ValidationError, instead returned: {:?}", error),
+        };
+    }
+}

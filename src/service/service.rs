@@ -36,3 +36,37 @@ pub fn get_user(id: i32) -> ServiceResult<Option<i32>> {
         },
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::state::{reset_state, DatabaseState, STATE};
+
+    #[test]
+    fn test_happy_path() {
+        reset_state();
+
+        let response = get_user(10).unwrap();
+        assert_eq!(response, Some(10));
+    }
+
+    #[test]
+    fn test_user_not_found() {
+        reset_state();
+
+        let response = get_user(100).unwrap();
+        assert_eq!(response, None);
+    }
+
+    #[test]
+    fn test_database_not_reachable() {
+        reset_state();
+        STATE.lock().unwrap().database_state = DatabaseState::Unreachable();
+
+        let response = get_user(1);
+
+        assert!(response.is_err());
+        // assert_eq!(response.unwrap_err().to_string(), "Not a valid id");
+    }
+}
