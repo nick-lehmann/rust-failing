@@ -60,9 +60,7 @@ mod api_tests {
     #[test]
     fn test_database_not_reachable() {
         reset_state();
-        let mut guard = STATE.lock().unwrap();
-        guard.database_state = DatabaseState::Unreachable();
-        drop(guard);
+        STATE.lock().unwrap().database_state = DatabaseState::Unreachable();
 
         println!("{:?}", STATE.lock().unwrap());
 

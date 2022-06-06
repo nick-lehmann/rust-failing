@@ -18,9 +18,7 @@ pub enum DatabaseError {
 }
 
 pub fn query(id: i32) -> Result<i32, DatabaseError> {
-    let state = STATE.lock().unwrap();
-    println!("SystemState in query: {:?}", state);
-    match state.database_state {
+    match STATE.lock().unwrap().database_state {
         DatabaseState::Fine() => {
             if id > 50 {
                 return Err(DatabaseError::NotFound());
