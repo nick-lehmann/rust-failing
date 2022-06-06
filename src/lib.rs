@@ -5,5 +5,6 @@
 ///
 pub mod api;
 pub mod external;
+pub mod http;
 pub mod service;
 pub mod state;
