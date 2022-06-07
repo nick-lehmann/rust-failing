@@ -16,10 +16,14 @@ They only have to know, how they should react to get back to a functioning syste
 - they should try at a later time
 - there is an unrecoverable error and an administrator has to be contacted
 
+The standard library already provides the `Display` trait which signalizes, that an object can be printed in a friendly way. In the context of error handling, we use this trait to display errors to the user.
+
 
 ### Administrators
 
-Administrators are people with deep insight into the system. They need as much information as possible to track down and fix the error promptly.
+Administrators are people with deep insight into the system. They need as much information as possible to track down and fix the error promptly. An administrator will benefit from further information in addition to a plain error message. Error chains and stack traces are such information.
+
+Furthermore, we will use the `Debug` trait from the standard library to note that an error can be printed in a more informative and still human-friendly way for an administrator.
 
 
 ### Machines
