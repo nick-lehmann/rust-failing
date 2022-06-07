@@ -1,8 +1,9 @@
+#![allow(unused_imports, unused_macros)]
 /// Formats the given error using the Debug trait.
 ///
 /// In addition, it also converts tabs to spaces to make
 /// the returned string comparable to the string literals in the tests.
-pub fn error_to_debug_string<E>(e: &E) -> String
+pub fn operator_report<E>(e: &E) -> String
 where
     E: std::fmt::Debug,
 {
@@ -13,7 +14,7 @@ where
 ///
 /// In addition, it also converts tabs to spaces to make
 /// the returned string comparable to the string literals in the tests.
-pub fn error_to_display_string<E>(e: &E) -> String
+pub fn user_report<E>(e: &E) -> String
 where
     E: std::fmt::Display,
 {
@@ -33,3 +34,17 @@ pub fn error_chain_fmt(
     }
     Ok(())
 }
+
+macro_rules! assert_operator_report {
+    ($literal:expr, $error:expr) => {
+        assert_eq!(operator_report(&$error), indoc!($literal));
+    };
+}
+pub(crate) use assert_operator_report;
+
+macro_rules! assert_user_report {
+    ($literal:expr, $error:expr) => {
+        assert_eq!(user_report(&$error), $literal);
+    };
+}
+pub(crate) use assert_user_report;

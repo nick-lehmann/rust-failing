@@ -14,7 +14,7 @@ mod tests {
         api::errors::ApiError,
         service::service::{FORBIDDEN_ID, VALID_ID},
         state::{reset_state, DatabaseState, STATE},
-        utils::{error_to_debug_string, error_to_display_string},
+        utils::{assert_operator_report, assert_user_report, operator_report, user_report},
     };
 
     use super::*;
@@ -37,20 +37,18 @@ mod tests {
 
         let api_input = HashMap::from([("id".into(), "foo".to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
+        assert!(matches!(error, ApiError::ValidationError(..)));
 
-        let msg = indoc! {"
+        assert_operator_report!(
+            "
             Validation failed
 
             Caused by:
                 Invalid value for id: foo
-        "};
-
-        match error {
-            ApiError::ValidationError(_) => {
-                assert_eq!(msg, error_to_debug_string(&error))
-            }
-            _ => panic!("Expected ValidationError, instead returned: {:?}", error),
-        };
+            ",
+            error
+        );
+        assert_user_report!("Validation failed", error);
     }
 
     #[test]
@@ -60,14 +58,17 @@ mod tests {
         let api_input = HashMap::from([("id".into(), FORBIDDEN_ID.to_string())]);
         let response = get_user_handler(api_input);
         let error = response.unwrap_err();
+        assert!(matches!(error, ApiError::Forbidden(_)));
+        assert_operator_report!(
+            "
+            Forbidden
 
-        match error {
-            ApiError::Forbidden(_) => "",
-            _ => panic!("Expected Forbidden, instead returned: {:?}", error),
-        };
+            ",
+            error
+        );
+        assert_user_report!("Forbidden", error);
     }
 
-    // TODO: Might need modification after retry is implemented.
     #[test]
     fn test_unreachable() {
         reset_state();
@@ -76,24 +77,19 @@ mod tests {
         let api_input = HashMap::from([("id".into(), "10".to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
 
-        let operator_message = indoc! {"
-        An unexpected error occurred
+        assert!(matches!(error, ApiError::Unexpected(..)));
+        assert_operator_report!(
+            "
+            An unexpected error occurred
 
-        Caused by:
-            The database timed out
-        Caused by:
-            Timeout
-        "};
-
-        let user_message = "An unexpected error occurred";
-
-        match error {
-            ApiError::Unexpected(_) => "",
-            _ => panic!("Expected Unexpected, instead returned: {:?}", error),
-        };
-
-        assert_eq!(operator_message, error_to_debug_string(&error));
-        assert_eq!(user_message, error_to_display_string(&error));
+            Caused by:
+                The database timed out
+            Caused by:
+                Timeout
+            ",
+            error
+        );
+        assert_user_report!("An unexpected error occurred", error);
     }
 
     #[test]
@@ -104,22 +100,18 @@ mod tests {
         let api_input = HashMap::from([("id".into(), VALID_ID.to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
 
-        let operator_message = indoc! {"
+        assert!(matches!(error, ApiError::Unexpected(..)));
+        assert_operator_report!(
+            "
             An unexpected error occurred
 
             Caused by:
                 The database was missing
             Caused by:
                 Database missing
-        "};
-
-        assert_eq!(error_to_debug_string(&error), operator_message);
-
-        match error {
-            ApiError::Unexpected(_) => {
-                assert_eq!(operator_message, error_to_debug_string(&error))
-            }
-            _ => panic!("Expected Unexpected, instead returned: {:?}", error),
-        };
+            ",
+            error
+        );
+        assert_user_report!("An unexpected error occurred", error);
     }
 }
