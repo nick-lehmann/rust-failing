@@ -1,5 +1,6 @@
 use super::errors::{ServiceError, ServiceResult};
 use crate::external::{query, DatabaseError};
+use retry::{delay::Fixed, retry};
 
 // Special ID to test for forbidden access. No user should have access to the user data associated with this ID.
 static ADMIN_ID: i32 = 1;
@@ -28,13 +29,15 @@ pub fn get_user(id: i32) -> ServiceResult<Option<i32>> {
         return Err(ServiceError::Forbidden());
     }
 
-    match query(id) {
-        Ok(user) => Ok(Some(user)),
-        Err(e) => match e {
-            DatabaseError::NotFound() => Ok(None),
-            _ => Err(e.into()),
-        },
-    }
+    Ok(retry(Fixed::from_millis(500).take(3), || {
+        match query(id) {
+            Ok(user) => Ok(Some(user)),
+            Err(e) => match e {
+                DatabaseError::NotFound() => Ok(None),
+                error => Err(error.into()),
+            },
+        }
+    })?)
 }
 
 #[cfg(test)]
