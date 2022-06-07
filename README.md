@@ -33,3 +33,16 @@ We can use errors for control flow too. Sometimes, operations fail but might suc
 Machines should therefore only get information that influences the control flow. It is not relevant, why the error is unrecoverable since all unrecoverable errors should bubble up until some caller knows how to handle these errors. In this context, handling an error could mean notifying both the user and an administrator about the problem.
 
 These errors are mainly used in libraries, while errors in applications are often targeted primarily to end-users and administrators.
+
+
+# Crates
+
+While the native error handling in Rust is advanced, it can be cumbersome to write all the necessary boilerplate. Fortunately, many users and the [Rust Error Handling Group](https://github.com/rust-lang/project-error-handling) have created crates that make handling errors more compact and ergonomic.
+
+- [thiserror](https://docs.rs/thiserror/latest/thiserror/): Derive macro for the `std::error::Error` trait
+- [anyhow](https://docs.rs/anyhow/latest/anyhow/): Opaque error type
+
+Over time, there were multiple attempts to improve upon the native error handling. Those attempts are mostly deprecated in favor of `thiserror` and `anyhow`.
+
+- [failure](https://docs.rs/failure/0.1.8/failure/)
+- [error-chain](https://docs.rs/error-chain/0.12.4/error_chain/)
