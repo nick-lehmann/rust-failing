@@ -13,25 +13,12 @@ mod tests {
     use crate::{
         api::errors::ApiError,
         state::{reset_state, DatabaseState, STATE},
+        utils::{error_to_debug_string, error_to_display_string},
     };
 
     use super::*;
     use indoc::indoc;
     use std::collections::HashMap;
-
-    fn error_to_debug_string<E>(e: &E) -> String
-    where
-        E: std::fmt::Debug,
-    {
-        format!("{:?}", e).replace("\t", "    ")
-    }
-
-    fn error_to_display_string<E>(e: &E) -> String
-    where
-        E: std::fmt::Display,
-    {
-        format!("{}", e).replace("\t", "    ")
-    }
 
     #[test]
     fn test_valid() {
