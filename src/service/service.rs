@@ -29,7 +29,7 @@ pub fn get_user(id: i32) -> ServiceResult<Option<i32>> {
         return Err(ServiceError::Forbidden());
     }
 
-    Ok(retry(Fixed::from_millis(500).take(3), || {
+    Ok(retry(Fixed::from_millis(100).take(3), || {
         match query(id) {
             Ok(user) => Ok(Some(user)),
             Err(e) => match e {

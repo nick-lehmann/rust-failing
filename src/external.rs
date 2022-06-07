@@ -10,7 +10,7 @@ pub enum DatabaseError {
 
     /// Unrecoverable errors.
     #[error("Database missing")]
-    DatabaseMissing(),
+    DatabaseMissing(String),
 
     /// Recoverable errors.
     #[error("Timeout")]
@@ -26,7 +26,7 @@ pub fn query(id: i32) -> Result<i32, DatabaseError> {
 
             Ok(id)
         }
-        DatabaseState::DatabaseMissing() => Err(DatabaseError::DatabaseMissing()),
+        DatabaseState::DatabaseMissing() => Err(DatabaseError::DatabaseMissing("user".to_string())),
         DatabaseState::Unreachable() => Err(DatabaseError::Timeout()),
     }
 }

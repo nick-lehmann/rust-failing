@@ -3,6 +3,22 @@ use super::{
     ApiInput, InputData,
 };
 
+type FieldName = &'static str;
+
+#[derive(Debug, thiserror::Error)]
+pub enum ValidationError {
+    #[error("Missing field: {0}")]
+    Missing(FieldName),
+    #[error("Invalid value for {0}: {1}")]
+    Invalid(FieldName, String),
+}
+
+impl From<ValidationError> for ServiceError {
+    fn from(error: ValidationError) -> Self {
+        return ServiceError::ValidationError(error.into());
+    }
+}
+
 /// Validate input received by the user.
 ///
 /// # Examples
@@ -14,13 +30,11 @@ use super::{
 /// assert_eq!(data, InputData { id: 1 });
 /// ```
 pub fn validate_input(input: ApiInput) -> ServiceResult<InputData> {
-    let id_string = input
-        .get("id")
-        .ok_or(ServiceError::ValidationError("No value 'id' found".into()))?;
+    let id_string = input.get("id").ok_or(ValidationError::Missing("id"))?;
 
     let id: i32 = id_string
         .parse()
-        .map_err(|e| ServiceError::ValidationError("Not a valid id".into()))?;
+        .map_err(|e| ValidationError::Invalid("id", id_string.to_owned()))?;
 
     Ok(InputData { id: id })
 }

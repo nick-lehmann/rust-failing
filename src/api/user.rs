@@ -1,11 +1,11 @@
-#![allow(dead_code, unused_variables)]
 use crate::service::{service::get_user, validation::validate_input, ApiInput};
 
 use super::errors::ApiResult;
 
 fn get_user_handler(api_input: ApiInput) -> ApiResult<Option<i32>> {
     let input = validate_input(api_input)?;
-    Ok(get_user(input.id)?)
+    let user = get_user(input.id)?;
+    Ok(user)
 }
 
 #[cfg(test)]
@@ -16,7 +16,15 @@ mod tests {
     };
 
     use super::*;
+    use indoc::indoc;
     use std::collections::HashMap;
+
+    fn error_to_string<E>(e: &E) -> String
+    where
+        E: std::fmt::Debug,
+    {
+        format!("{:?}", e).replace("\t", "    ")
+    }
 
     #[test]
     fn test_valid() {
@@ -33,11 +41,19 @@ mod tests {
         reset_state();
 
         let api_input = HashMap::from([("id".into(), "foo".to_string())]);
-        let response = get_user_handler(api_input);
-        let error = response.unwrap_err();
+        let error = get_user_handler(api_input).unwrap_err();
+
+        let msg = indoc! {"
+            Validation failed
+
+            Caused by:
+                Invalid value for id: foo
+        "};
 
         match error {
-            ApiError::ValidationError(_) => "",
+            ApiError::ValidationError(_) => {
+                assert_eq!(msg, error_to_string(&error))
+            }
             _ => panic!("Expected ValidationError, instead returned: {:?}", error),
         };
     }
@@ -63,11 +79,22 @@ mod tests {
         STATE.lock().unwrap().database_state = DatabaseState::Unreachable();
 
         let api_input = HashMap::from([("id".into(), "10".to_string())]);
-        let response = get_user_handler(api_input);
+        let error = get_user_handler(api_input).unwrap_err();
 
-        match response {
-            Err(ApiError::Unexpected(_)) => "",
-            _ => panic!("Expected Unexpected, instead returned: {:?}", response),
+        let msg = indoc! {"
+        An unexpected error occurred
+
+        Caused by:
+            The database timed out
+        Caused by:
+            Timeout
+        "};
+
+        match error {
+            ApiError::Unexpected(_) => {
+                assert_eq!(msg, error_to_string(&error))
+            }
+            _ => panic!("Expected Unexpected, instead returned: {:?}", error),
         };
     }
 
@@ -77,11 +104,24 @@ mod tests {
         STATE.lock().unwrap().database_state = DatabaseState::DatabaseMissing();
 
         let api_input = HashMap::from([("id".into(), "10".to_string())]);
-        let response = get_user_handler(api_input);
+        let error = get_user_handler(api_input).unwrap_err();
 
-        match response {
-            Err(ApiError::Unexpected(_)) => "",
-            _ => panic!("Expected Unexpected, instead returned: {:?}", response),
+        let msg = indoc! {"
+            An unexpected error occurred
+
+            Caused by:
+                The database was missing
+            Caused by:
+                Database missing
+        "};
+
+        assert_eq!(error_to_string(&error), msg);
+
+        match error {
+            ApiError::Unexpected(_) => {
+                assert_eq!(msg, error_to_string(&error))
+            }
+            _ => panic!("Expected Unexpected, instead returned: {:?}", error),
         };
     }
 }
