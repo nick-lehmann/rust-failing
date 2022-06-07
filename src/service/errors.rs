@@ -32,12 +32,6 @@ impl Into<ServiceError> for DatabaseError {
     }
 }
 
-impl<T> Into<retry::OperationResult<T, ServiceError>> for ServiceError {
-    fn into(self) -> retry::OperationResult<T, ServiceError> {
-        todo!();
-    }
-}
-
 impl From<retry::Error<ServiceError>> for ServiceError {
     fn from(error: retry::Error<ServiceError>) -> ServiceError {
         match error {
