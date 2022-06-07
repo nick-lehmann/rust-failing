@@ -3,7 +3,9 @@ use crate::external::{query, DatabaseError};
 use retry::{delay::Fixed, retry};
 
 // Special ID to test for forbidden access. No user should have access to the user data associated with this ID.
-static ADMIN_ID: i32 = 1;
+pub static FORBIDDEN_ID: i32 = 1;
+pub static VALID_ID: i32 = 10;
+pub static INVALID_ID: i32 = 100;
 
 /// Query an external database.
 ///
@@ -25,7 +27,7 @@ static ADMIN_ID: i32 = 1;
 /// assert_eq!(result, None);
 /// ```
 pub fn get_user(id: i32) -> ServiceResult<Option<i32>> {
-    if id == ADMIN_ID {
+    if id == FORBIDDEN_ID {
         return Err(ServiceError::Forbidden());
     }
 
@@ -50,7 +52,7 @@ mod tests {
     fn test_happy_path() {
         reset_state();
 
-        let response = get_user(10).unwrap();
+        let response = get_user(VALID_ID).unwrap();
         assert_eq!(response, Some(10));
     }
 
@@ -58,7 +60,7 @@ mod tests {
     fn test_user_not_found() {
         reset_state();
 
-        let response = get_user(100).unwrap();
+        let response = get_user(INVALID_ID).unwrap();
         assert_eq!(response, None);
     }
 
@@ -67,7 +69,7 @@ mod tests {
         reset_state();
         STATE.lock().unwrap().database_state = DatabaseState::Unreachable();
 
-        let response = get_user(1);
+        let response = get_user(FORBIDDEN_ID);
 
         assert!(response.is_err());
         // assert_eq!(response.unwrap_err().to_string(), "Not a valid id");

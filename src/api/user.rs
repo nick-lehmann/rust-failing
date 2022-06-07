@@ -12,6 +12,7 @@ fn get_user_handler(api_input: ApiInput) -> ApiResult<Option<i32>> {
 mod tests {
     use crate::{
         api::errors::ApiError,
+        service::service::{FORBIDDEN_ID, VALID_ID},
         state::{reset_state, DatabaseState, STATE},
         utils::{error_to_debug_string, error_to_display_string},
     };
@@ -24,7 +25,7 @@ mod tests {
     fn test_valid() {
         reset_state();
 
-        let api_input = HashMap::from([("id".into(), "10".to_string())]);
+        let api_input = HashMap::from([("id".into(), VALID_ID.to_string())]);
         let response = get_user_handler(api_input).unwrap();
 
         assert_eq!(response, Some(10));
@@ -56,7 +57,7 @@ mod tests {
     fn test_forbidden() {
         reset_state();
 
-        let api_input = HashMap::from([("id".into(), "1".to_string())]);
+        let api_input = HashMap::from([("id".into(), FORBIDDEN_ID.to_string())]);
         let response = get_user_handler(api_input);
         let error = response.unwrap_err();
 
@@ -100,7 +101,7 @@ mod tests {
         reset_state();
         STATE.lock().unwrap().database_state = DatabaseState::DatabaseMissing();
 
-        let api_input = HashMap::from([("id".into(), "10".to_string())]);
+        let api_input = HashMap::from([("id".into(), VALID_ID.to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
 
         let operator_message = indoc! {"
