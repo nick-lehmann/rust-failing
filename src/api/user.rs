@@ -19,11 +19,18 @@ mod tests {
     use indoc::indoc;
     use std::collections::HashMap;
 
-    fn error_to_string<E>(e: &E) -> String
+    fn error_to_debug_string<E>(e: &E) -> String
     where
         E: std::fmt::Debug,
     {
         format!("{:?}", e).replace("\t", "    ")
+    }
+
+    fn error_to_display_string<E>(e: &E) -> String
+    where
+        E: std::fmt::Display,
+    {
+        format!("{}", e).replace("\t", "    ")
     }
 
     #[test]
@@ -52,7 +59,7 @@ mod tests {
 
         match error {
             ApiError::ValidationError(_) => {
-                assert_eq!(msg, error_to_string(&error))
+                assert_eq!(msg, error_to_debug_string(&error))
             }
             _ => panic!("Expected ValidationError, instead returned: {:?}", error),
         };
@@ -81,7 +88,7 @@ mod tests {
         let api_input = HashMap::from([("id".into(), "10".to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
 
-        let msg = indoc! {"
+        let operator_message = indoc! {"
         An unexpected error occurred
 
         Caused by:
@@ -90,12 +97,15 @@ mod tests {
             Timeout
         "};
 
+        let user_message = "An unexpected error occurred";
+
         match error {
-            ApiError::Unexpected(_) => {
-                assert_eq!(msg, error_to_string(&error))
-            }
+            ApiError::Unexpected(_) => "",
             _ => panic!("Expected Unexpected, instead returned: {:?}", error),
         };
+
+        assert_eq!(operator_message, error_to_debug_string(&error));
+        assert_eq!(user_message, error_to_display_string(&error));
     }
 
     #[test]
@@ -106,7 +116,7 @@ mod tests {
         let api_input = HashMap::from([("id".into(), "10".to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
 
-        let msg = indoc! {"
+        let operator_message = indoc! {"
             An unexpected error occurred
 
             Caused by:
@@ -115,11 +125,11 @@ mod tests {
                 Database missing
         "};
 
-        assert_eq!(error_to_string(&error), msg);
+        assert_eq!(error_to_debug_string(&error), operator_message);
 
         match error {
             ApiError::Unexpected(_) => {
-                assert_eq!(msg, error_to_string(&error))
+                assert_eq!(operator_message, error_to_debug_string(&error))
             }
             _ => panic!("Expected Unexpected, instead returned: {:?}", error),
         };
