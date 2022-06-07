@@ -40,7 +40,9 @@ These errors are mainly used in libraries, while errors in applications are ofte
 While the native error handling in Rust is advanced, it can be cumbersome to write all the necessary boilerplate. Fortunately, many users and the [Rust Error Handling Group](https://github.com/rust-lang/project-error-handling) have created crates that make handling errors more compact and ergonomic.
 
 - [thiserror](https://docs.rs/thiserror/latest/thiserror/): Derive macro for the `std::error::Error` trait
+- [snafu](https://docs.rs/snafu/latest/snafu/): Similar to `thiserror` but with the ability to add context. 
 - [anyhow](https://docs.rs/anyhow/latest/anyhow/): Opaque error type
+- [fehler](https://docs.rs/fehler/latest/fehler/): Macro for `throw`ing errors like in python or java
 
 Over time, there were multiple attempts to improve upon the native error handling. Those attempts are mostly deprecated in favor of `thiserror` and `anyhow`.
 
