@@ -7,17 +7,26 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in library 'failing'",
+      "name": "Debug executable 'failing'",
       "cargo": {
-        "args": [
-          "test",
-          "--no-run",
-          "--lib",
-          "--package=failing"
-        ],
+        "args": ["build", "--bin=failing", "--package=failing"],
         "filter": {
           "name": "failing",
-          "kind": "lib"
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'failing'",
+      "cargo": {
+        "args": ["test", "--no-run", "--bin=failing", "--package=failing"],
+        "filter": {
+          "name": "failing",
+          "kind": "bin"
         }
       },
       "args": [],
