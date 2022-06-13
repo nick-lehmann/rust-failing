@@ -1,19 +1,37 @@
 use crate::external::DatabaseError;
 use anyhow::anyhow;
+use snafu::Snafu;
 
-#[derive(Debug, thiserror::Error)]
+use super::validation::ValidationError;
+
+// #[derive(Debug, thiserror::Error)]
+// pub enum ServiceError {
+//     #[error("Validation failed")]
+//     ValidationError(#[source] anyhow::Error),
+
+//     #[error("Forbidden")]
+//     Forbidden(),
+
+//     #[error("Unable to reach database")]
+//     Recoverable(#[source] anyhow::Error),
+
+//     #[error("Unexpected error")]
+//     Unexpected(#[source] anyhow::Error),
+// }
+
+#[derive(Debug, Snafu)]
 pub enum ServiceError {
-    #[error("Validation failed")]
-    ValidationError(#[source] anyhow::Error),
+    #[snafu(display("Validation failed"))]
+    ValidationError { source: ValidationError },
 
-    #[error("Forbidden")]
-    Forbidden(),
+    #[snafu(display("Forbidden"))]
+    Forbidden,
 
-    #[error("Unable to reach database")]
-    Recoverable(#[source] anyhow::Error),
+    #[snafu(display("A dependency is unavailable"))]
+    Recoverable { source: anyhow::Error },
 
-    #[error("Unexpected error")]
-    Unexpected(#[source] anyhow::Error),
+    #[snafu(display("Unexpected error"))]
+    Unexpected { source: anyhow::Error },
 }
 
 pub type ServiceResult<T> = Result<T, ServiceError>;
@@ -21,13 +39,15 @@ pub type ServiceResult<T> = Result<T, ServiceError>;
 impl Into<ServiceError> for DatabaseError {
     fn into(self) -> ServiceError {
         match self {
-            DatabaseError::NotFound() => ServiceError::Unexpected(self.into()),
-            DatabaseError::DatabaseMissing(_) => {
-                ServiceError::Unexpected(anyhow!(self).context("The database was missing"))
+            DatabaseError::NotFound() => {
+                unreachable!("NotFound should always be converted into `None`")
             }
-            DatabaseError::Timeout() => {
-                ServiceError::Recoverable(anyhow!(self).context("The database timed out"))
-            }
+            DatabaseError::DatabaseMissing(_) => ServiceError::Unexpected {
+                source: anyhow!(self).context("The database was missing"),
+            },
+            DatabaseError::Timeout() => ServiceError::Recoverable {
+                source: anyhow!(self).context("The database timed out"),
+            },
         }
     }
 }
@@ -40,7 +60,9 @@ impl From<retry::Error<ServiceError>> for ServiceError {
                 total_delay,
                 tries,
             } => error,
-            retry::Error::Internal(msg) => ServiceError::Unexpected(anyhow!(msg)),
+            retry::Error::Internal(msg) => ServiceError::Unexpected {
+                source: anyhow!(msg),
+            },
         }
     }
 }

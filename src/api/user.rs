@@ -1,9 +1,12 @@
-use crate::service::{service::get_user, validation::validate_input, ApiInput};
+use crate::service::{
+    errors::ServiceError, service::get_user, validation::validate_input, ApiInput,
+};
 
 use super::errors::ApiResult;
 
 pub fn get_user_handler(api_input: ApiInput) -> ApiResult<Option<i32>> {
-    let input = validate_input(api_input)?;
+    let input =
+        validate_input(api_input).map_err(|e| ServiceError::ValidationError { source: e })?;
     let user = get_user(input.id)?;
     Ok(user)
 }
@@ -37,12 +40,14 @@ mod tests {
 
         let api_input = HashMap::from([("id".into(), "foo".to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
-        assert!(matches!(error, ApiError::ValidationError(..)));
+        assert!(matches!(error, ApiError::ValidationError { .. }));
 
         assert_operator_report!(
             "
             Validation failed
 
+            Caused by:
+                Validation failed
             Caused by:
                 Invalid value for id: foo
             ",
@@ -58,7 +63,7 @@ mod tests {
         let api_input = HashMap::from([("id".into(), FORBIDDEN_ID.to_string())]);
         let response = get_user_handler(api_input);
         let error = response.unwrap_err();
-        assert!(matches!(error, ApiError::Forbidden(_)));
+        assert!(matches!(error, ApiError::Forbidden));
         assert_operator_report!(
             "
             Forbidden
@@ -77,15 +82,17 @@ mod tests {
         let api_input = HashMap::from([("id".into(), "10".to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
 
-        assert!(matches!(error, ApiError::Unexpected(..)));
+        assert!(matches!(error, ApiError::Unexpected { .. }));
         assert_operator_report!(
             "
             An unexpected error occurred
-
+            
+            Caused by:
+                A dependency is unavailable
             Caused by:
                 The database timed out
             Caused by:
-                Timeout
+                Connection to the database timed out
             ",
             error
         );
@@ -100,11 +107,13 @@ mod tests {
         let api_input = HashMap::from([("id".into(), VALID_ID.to_string())]);
         let error = get_user_handler(api_input).unwrap_err();
 
-        assert!(matches!(error, ApiError::Unexpected(..)));
+        assert!(matches!(error, ApiError::Unexpected { .. }));
         assert_operator_report!(
             "
             An unexpected error occurred
-
+            
+            Caused by:
+                Unexpected error
             Caused by:
                 The database was missing
             Caused by:

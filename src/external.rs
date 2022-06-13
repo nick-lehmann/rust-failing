@@ -13,7 +13,7 @@ pub enum DatabaseError {
     DatabaseMissing(String),
 
     /// Recoverable errors.
-    #[error("Timeout")]
+    #[error("Connection to the database timed out")]
     Timeout(),
 }
 
