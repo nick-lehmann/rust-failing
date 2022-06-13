@@ -1,4 +1,4 @@
-use crate::external::DatabaseError;
+use crate::{external::DatabaseError, permission::PermissionError};
 use anyhow::anyhow;
 use snafu::Snafu;
 
@@ -24,8 +24,8 @@ pub enum UserServiceError {
     #[snafu(display("Validation failed"))]
     ValidationError { source: ValidationError },
 
-    #[snafu(display("Forbidden"))]
-    Forbidden,
+    #[snafu(display("Current user has insufficient permissions."))]
+    Forbidden { source: PermissionError },
 
     #[snafu(display("A dependency is unavailable"))]
     Recoverable { source: anyhow::Error },
@@ -34,7 +34,7 @@ pub enum UserServiceError {
     Unexpected { source: anyhow::Error },
 }
 
-pub type ServiceResult<T> = Result<T, UserServiceError>;
+pub type UserServiceResult<T> = Result<T, UserServiceError>;
 
 impl Into<UserServiceError> for DatabaseError {
     fn into(self) -> UserServiceError {
@@ -64,5 +64,11 @@ impl From<retry::Error<UserServiceError>> for UserServiceError {
                 source: anyhow!(msg),
             },
         }
+    }
+}
+
+impl From<PermissionError> for UserServiceError {
+    fn from(error: PermissionError) -> UserServiceError {
+        UserServiceError::Forbidden { source: error }
     }
 }

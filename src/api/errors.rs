@@ -1,4 +1,6 @@
-use crate::{service::errors::UserServiceError, utils::error_chain_fmt};
+use crate::{
+    permission::PermissionError, service::errors::UserServiceError, utils::error_chain_fmt,
+};
 use anyhow::anyhow;
 use snafu::Snafu;
 
@@ -27,7 +29,7 @@ pub enum ApiError {
 
     // User has no access to the required data.
     #[snafu(display("Forbidden"))]
-    Forbidden,
+    Forbidden { source: PermissionError },
 
     // Something that should not have happened.
     #[snafu(display("An unexpected error occurred"))]
@@ -48,7 +50,7 @@ impl From<UserServiceError> for ApiError {
             UserServiceError::ValidationError { .. } => {
                 ApiError::ValidationError { source: anyhow!(e) }
             }
-            UserServiceError::Forbidden => ApiError::Forbidden,
+            UserServiceError::Forbidden { source } => ApiError::Forbidden { source },
             UserServiceError::Recoverable { .. } => ApiError::Unexpected { source: anyhow!(e) },
             UserServiceError::Unexpected { .. } => ApiError::Unexpected { source: anyhow!(e) },
         }

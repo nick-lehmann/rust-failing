@@ -1,5 +1,8 @@
-use super::errors::{ServiceResult, UserServiceError};
-use crate::external::{query, DatabaseError};
+use super::errors::UserServiceResult;
+use crate::{
+    external::{query, DatabaseError},
+    permission::{Action, PermissionError, Resource},
+};
 use retry::{delay::Fixed, retry};
 
 // Special ID to test for forbidden access. No user should have access to the user data associated with this ID.
@@ -26,9 +29,9 @@ pub static INVALID_ID: i32 = 100;
 /// let result = get_user(100).unwrap();
 /// assert_eq!(result, None);
 /// ```
-pub fn get_user(id: i32) -> ServiceResult<Option<i32>> {
+pub fn get_user(id: i32) -> UserServiceResult<Option<i32>> {
     if id == FORBIDDEN_ID {
-        return Err(UserServiceError::Forbidden);
+        Err(PermissionError::new(Resource::User, Action::Read, None))?;
     }
 
     Ok(retry(Fixed::from_millis(100).take(3), || {

@@ -4,6 +4,7 @@
 
 pub mod api;
 pub mod external;
+pub mod permission;
 pub mod service;
 pub mod state;
 mod utils;

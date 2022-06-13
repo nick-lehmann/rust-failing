@@ -63,11 +63,13 @@ mod tests {
         let api_input = HashMap::from([("id".into(), FORBIDDEN_ID.to_string())]);
         let response = get_user_handler(api_input);
         let error = response.unwrap_err();
-        assert!(matches!(error, ApiError::Forbidden));
+        assert!(matches!(error, ApiError::Forbidden { .. }));
         assert_operator_report!(
             "
             Forbidden
-
+            
+            Caused by:
+                Missing permission: user.read
             ",
             error
         );
