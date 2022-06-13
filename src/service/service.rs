@@ -1,4 +1,4 @@
-use super::errors::{ServiceError, ServiceResult};
+use super::errors::{ServiceResult, UserServiceError};
 use crate::external::{query, DatabaseError};
 use retry::{delay::Fixed, retry};
 
@@ -28,7 +28,7 @@ pub static INVALID_ID: i32 = 100;
 /// ```
 pub fn get_user(id: i32) -> ServiceResult<Option<i32>> {
     if id == FORBIDDEN_ID {
-        return Err(ServiceError::Forbidden);
+        return Err(UserServiceError::Forbidden);
     }
 
     Ok(retry(Fixed::from_millis(100).take(3), || {

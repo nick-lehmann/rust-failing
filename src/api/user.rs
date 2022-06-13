@@ -1,12 +1,12 @@
 use crate::service::{
-    errors::ServiceError, service::get_user, validation::validate_input, ApiInput,
+    errors::UserServiceError, service::get_user, validation::validate_input, ApiInput,
 };
 
 use super::errors::ApiResult;
 
 pub fn get_user_handler(api_input: ApiInput) -> ApiResult<Option<i32>> {
     let input =
-        validate_input(api_input).map_err(|e| ServiceError::ValidationError { source: e })?;
+        validate_input(api_input).map_err(|e| UserServiceError::ValidationError { source: e })?;
     let user = get_user(input.id)?;
     Ok(user)
 }

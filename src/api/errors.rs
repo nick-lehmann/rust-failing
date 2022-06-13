@@ -1,4 +1,4 @@
-use crate::{service::errors::ServiceError, utils::error_chain_fmt};
+use crate::{service::errors::UserServiceError, utils::error_chain_fmt};
 use anyhow::anyhow;
 use snafu::Snafu;
 
@@ -42,15 +42,15 @@ impl std::fmt::Debug for ApiError {
 
 pub type ApiResult<T> = Result<T, ApiError>;
 
-impl From<ServiceError> for ApiError {
-    fn from(e: ServiceError) -> Self {
+impl From<UserServiceError> for ApiError {
+    fn from(e: UserServiceError) -> Self {
         match e {
-            ServiceError::ValidationError { .. } => {
+            UserServiceError::ValidationError { .. } => {
                 ApiError::ValidationError { source: anyhow!(e) }
             }
-            ServiceError::Forbidden => ApiError::Forbidden,
-            ServiceError::Recoverable { .. } => ApiError::Unexpected { source: anyhow!(e) },
-            ServiceError::Unexpected { .. } => ApiError::Unexpected { source: anyhow!(e) },
+            UserServiceError::Forbidden => ApiError::Forbidden,
+            UserServiceError::Recoverable { .. } => ApiError::Unexpected { source: anyhow!(e) },
+            UserServiceError::Unexpected { .. } => ApiError::Unexpected { source: anyhow!(e) },
         }
     }
 }

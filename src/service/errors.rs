@@ -20,7 +20,7 @@ use super::validation::ValidationError;
 // }
 
 #[derive(Debug, Snafu)]
-pub enum ServiceError {
+pub enum UserServiceError {
     #[snafu(display("Validation failed"))]
     ValidationError { source: ValidationError },
 
@@ -34,33 +34,33 @@ pub enum ServiceError {
     Unexpected { source: anyhow::Error },
 }
 
-pub type ServiceResult<T> = Result<T, ServiceError>;
+pub type ServiceResult<T> = Result<T, UserServiceError>;
 
-impl Into<ServiceError> for DatabaseError {
-    fn into(self) -> ServiceError {
+impl Into<UserServiceError> for DatabaseError {
+    fn into(self) -> UserServiceError {
         match self {
             DatabaseError::NotFound() => {
                 unreachable!("NotFound should always be converted into `None`")
             }
-            DatabaseError::DatabaseMissing(_) => ServiceError::Unexpected {
+            DatabaseError::DatabaseMissing(_) => UserServiceError::Unexpected {
                 source: anyhow!(self).context("The database was missing"),
             },
-            DatabaseError::Timeout() => ServiceError::Recoverable {
+            DatabaseError::Timeout() => UserServiceError::Recoverable {
                 source: anyhow!(self).context("The database timed out"),
             },
         }
     }
 }
 
-impl From<retry::Error<ServiceError>> for ServiceError {
-    fn from(error: retry::Error<ServiceError>) -> ServiceError {
+impl From<retry::Error<UserServiceError>> for UserServiceError {
+    fn from(error: retry::Error<UserServiceError>) -> UserServiceError {
         match error {
             retry::Error::Operation {
                 error,
                 total_delay,
                 tries,
             } => error,
-            retry::Error::Internal(msg) => ServiceError::Unexpected {
+            retry::Error::Internal(msg) => UserServiceError::Unexpected {
                 source: anyhow!(msg),
             },
         }
